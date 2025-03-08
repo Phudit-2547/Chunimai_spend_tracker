@@ -1,0 +1,32 @@
+name: Run Jupyter Notebook
+
+on:
+  schedule:
+    - cron: '0 15 * * *'  # Runs at 22:00 ICT (Thailand time)
+
+jobs:
+  run-notebook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt  # Install required packages
+          pip install jupyter  # Install Jupyter
+
+      - name: Run Jupyter Notebook
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}  # Store DB URL in GitHub Secrets
+          USERNAME: ${{ secrets.USERNAME }}  # Store SEGA ID username in Secrets
+          PASSWORD: ${{ secrets.PASSWORD }}  # Store SEGA ID password in Secrets
+        run: |
+          jupyter nbconvert --to notebook --execute your_notebook.ipynb --output executed_notebook.ipynb
+
