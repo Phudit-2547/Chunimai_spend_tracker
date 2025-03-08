@@ -1,36 +1,31 @@
-name: Run Game Scraper
+name: Run Scraper
 
 on:
   schedule:
-    - cron: '0 15 * * *'  # Runs at 15:00 UTC (22:00 Thailand Time)
-  workflow_dispatch:  # Allows manual trigger
+    - cron: '0 15 * * *'  # Runs daily at 22:00 Thailand time (UTC+7)
+  workflow_dispatch:  # ✅ Allows manual trigger
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Install Dependencies
         run: |
           pip install -r requirements.txt
-          playwright install  # Install Playwright browsers
+          playwright install
 
-      - name: Run Python Script
+      - name: Run Scraper
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           USERNAME: ${{ secrets.USERNAME }}
           PASSWORD: ${{ secrets.PASSWORD }}
-        run: python scraper.py
-
-      - name: Notify on Failure
-        if: failure()
-        run: echo "❌ Scraper failed!"
+        run: python scraper.py 
