@@ -1,0 +1,4 @@
+jupyter
+nbconvert
+asyncpg
+playwright
