@@ -1,32 +1,36 @@
-name: Run Jupyter Notebook
+name: Run Game Scraper
 
 on:
   schedule:
-    - cron: '0 15 * * *'  # Runs at 22:00 ICT (Thailand time)
+    - cron: '0 15 * * *'  # Runs at 15:00 UTC (22:00 Thailand Time)
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  run-notebook:
+  run-scraper:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install Dependencies
         run: |
-          pip install -r requirements.txt  # Install required packages
-          pip install jupyter  # Install Jupyter
+          pip install -r requirements.txt
+          playwright install  # Install Playwright browsers
 
-      - name: Run Jupyter Notebook
+      - name: Run Python Script
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}  # Store DB URL in GitHub Secrets
-          USERNAME: ${{ secrets.USERNAME }}  # Store SEGA ID username in Secrets
-          PASSWORD: ${{ secrets.PASSWORD }}  # Store SEGA ID password in Secrets
-        run: |
-          jupyter nbconvert --to notebook --execute your_notebook.ipynb --output executed_notebook.ipynb
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          USERNAME: ${{ secrets.USERNAME }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+        run: python scraper.py
 
+      - name: Notify on Failure
+        if: failure()
+        run: echo "❌ Scraper failed!"
