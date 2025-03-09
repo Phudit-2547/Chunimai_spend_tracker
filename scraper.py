@@ -134,7 +134,8 @@ def send_discord_notification(game, play_count):
     if play_count > 0:
         message = {
             "username": "Game Scraper Bot",
-            "content": f"🎵 **{game.capitalize()}**: You have played **{play_count}** credits today!",
+            "avatar_url": "https://storage.sekai.best/sekai-jp-assets/character/member/res005_no026_rip/card_normal.webp",
+            "content": f"🎵 **{game.capitalize()}**: You have played **{play_count}** credits today!"
         }
         response = requests.post(
             DISCORD_WEBHOOK_URL,
@@ -146,6 +147,7 @@ def send_discord_notification(game, play_count):
             print(f"✅ Sent Discord notification for {game}.")
         else:
             print(f"❌ Failed to send Discord message. Response: {response.text}")
+
 
 
 async def main():
