@@ -228,13 +228,14 @@ async def generate_spending_report():
 async def main():
     today_str = datetime.today().strftime("%Y-%m-%d")
     yesterday_str = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
-
-    # Run weekly report every Monday
-    if datetime.today().weekday() == 0:
+    today = datetime.today()
+    
+    # Run the monthly report on the 1st of each month
+    if today.day == 1:
         await generate_spending_report()
-
-    # Run monthly report on the 1st of each month
-    if datetime.today().day == 1:
+    
+    # Run the weekly report every Monday
+    if today.weekday() == 0:  # Monday (0 = Monday, 6 = Sunday)
         await generate_spending_report()
 
     # Get cumulative play counts from the websites.
