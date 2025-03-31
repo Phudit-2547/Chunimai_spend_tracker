@@ -139,7 +139,7 @@ def send_discord_notification(game, play_count):
     if play_count > 0:
         message = {
             "username": "Game Scraper Bot",
-            "avatar_url": "https://storage.sekai.best/sekai-jp-assets/character/member/res005_no026_rip/card_normal.webp",
+            "avatar_url": "https://pbs.twimg.com/media/F2kuDs2bkAA9wVR?format=jpg&name=4096x4096",
             "content": f"🎵 **{game.capitalize()}**: You played **{play_count}** new credits today!"
         }
         response = requests.post(
@@ -152,64 +152,45 @@ def send_discord_notification(game, play_count):
         else:
             print(f"❌ Failed to send Discord message. Response: {response.text}")
 
-async def generate_spending_report():
-    """Calculates and sends weekly & monthly spending report to Discord."""
+async def generate_weekly_report():
+    """Generates a report of weekly play averages and sends it to Discord."""
     conn = await connect_db()
     try:
         today = datetime.today()
-
-        # WEEKLY CALCULATION (Last Monday-Sunday)
         last_sunday = today - timedelta(days=today.weekday() + 1)  # Last Sunday
-        last_monday = last_sunday - timedelta(days=6)  # Monday before that
-        query_weekly = """
+        last_monday = last_sunday - timedelta(days=6)  # Monday before last Sunday
+
+        # Query for last week
+        query = """
             SELECT SUM(maimai_play_count) AS maimai_total, SUM(chunithm_play_count) AS chunithm_total
             FROM public.play_data 
             WHERE play_date BETWEEN $1 AND $2;
         """
-        weekly_row = await conn.fetchrow(query_weekly, last_monday, last_sunday)
+        row = await conn.fetchrow(query, last_monday, last_sunday)
 
-        maimai_weekly = weekly_row["maimai_total"] or 0
-        chunithm_weekly = weekly_row["chunithm_total"] or 0
-        maimai_weekly_cost = maimai_weekly * 40
-        chunithm_weekly_cost = chunithm_weekly * 40
+        # Default to 0 if no data exists
+        maimai_week = row["maimai_total"] or 0
+        chunithm_week = row["chunithm_total"] or 0
 
-        avg_maimai_weekly = maimai_weekly_cost / 7 if maimai_weekly > 0 else 0
-        avg_chunithm_weekly = chunithm_weekly_cost / 7 if chunithm_weekly > 0 else 0
+        # Calculate weekly cost (1 play = 40 THB)
+        cost_maimai_week = maimai_week * 40
+        cost_chunithm_week = chunithm_week * 40
 
-        # MONTHLY CALCULATION (Last Calendar Month)
-        month_start = today.replace(day=1)  # First day of current month
-        last_month_end = month_start - timedelta(days=1)  # Last day of previous month
-        last_month_start = last_month_end.replace(day=1)  # First day of previous month
-        query_monthly = """
-            SELECT SUM(maimai_play_count) AS maimai_total, SUM(chunithm_play_count) AS chunithm_total
-            FROM public.play_data 
-            WHERE play_date BETWEEN $1 AND $2;
-        """
-        monthly_row = await conn.fetchrow(query_monthly, last_month_start, last_month_end)
+        # Compute weekly averages
+        avg_maimai_week = cost_maimai_week / 7 if maimai_week > 0 else 0
+        avg_chunithm_week = cost_chunithm_week / 7 if chunithm_week > 0 else 0
 
-        maimai_monthly = monthly_row["maimai_total"] or 0
-        chunithm_monthly = monthly_row["chunithm_total"] or 0
-        maimai_monthly_cost = maimai_monthly * 40
-        chunithm_monthly_cost = chunithm_monthly * 40
-
-        avg_maimai_monthly = maimai_monthly_cost / last_month_end.day if maimai_monthly > 0 else 0
-        avg_chunithm_monthly = chunithm_monthly_cost / last_month_end.day if chunithm_monthly > 0 else 0
-
-        # Generate report message
+        # Generate the report message
         report_content = (
-            f"📊 **Spending Report**\n"
-            f"📅 **Last Week (Mon-Sun):**\n"
-            f"🎵 **Maimai**: {maimai_weekly} plays → 💰 {maimai_weekly_cost:,} THB (avg {avg_maimai_weekly:.2f} THB/day)\n"
-            f"🎶 **Chunithm**: {chunithm_weekly} plays → 💰 {chunithm_weekly_cost:,} THB (avg {avg_chunithm_weekly:.2f} THB/day)\n\n"
-            f"📆 **Last Month ({last_month_start.strftime('%B %Y')}):**\n"
-            f"🎵 **Maimai**: {maimai_monthly} plays → 💰 {maimai_monthly_cost:,} THB (avg {avg_maimai_monthly:.2f} THB/day)\n"
-            f"🎶 **Chunithm**: {chunithm_monthly} plays → 💰 {chunithm_monthly_cost:,} THB (avg {avg_chunithm_monthly:.2f} THB/day)"
+            f"📊 **Weekly Play Report (Mon-Sun)**\n\n"
+            f"🎵 **Maimai**: {maimai_week} plays → **{cost_maimai_week:,} THB** (avg {avg_maimai_week:.2f} THB/day)\n"
+            f"🎶 **Chunithm**: {chunithm_week} plays → **{cost_chunithm_week:,} THB** (avg {avg_chunithm_week:.2f} THB/day)\n"
         )
 
-        # Send report to Discord
+        # Send to Discord
         message = {
             "username": "Game Stats Bot",
-            "avatar_url": "https://static.wikitide.net/projectsekaiwiki/0/0f/Minori_V2.png",
+            "avatar_url": "https://pbs.twimg.com/media/F2kuDs2bkAA9wVR?format=jpg&name=4096x4096",
             "content": report_content,
         }
         response = requests.post(
@@ -219,9 +200,64 @@ async def generate_spending_report():
         )
 
         if response.status_code == 204:
-            print("✅ Spending report sent to Discord.")
+            print("✅ Weekly report sent to Discord.")
         else:
-            print(f"❌ Failed to send spending report. Response: {response.text}")
+            print(f"❌ Failed to send weekly report. Response: {response.text}")
+    finally:
+        await conn.close()
+
+async def generate_monthly_report():
+    """Generates a report of monthly play averages and sends it to Discord."""
+    conn = await connect_db()
+    try:
+        today = datetime.today()
+        month_start = today.replace(day=1)  # First day of this month
+        last_month_end = month_start - timedelta(days=1)  # Last day of the previous month
+        last_month_start = last_month_end.replace(day=1)  # First day of the previous month
+
+        # Query for last month
+        query = """
+            SELECT SUM(maimai_play_count) AS maimai_total, SUM(chunithm_play_count) AS chunithm_total
+            FROM public.play_data 
+            WHERE play_date BETWEEN $1 AND $2;
+        """
+        row = await conn.fetchrow(query, last_month_start, last_month_end)
+
+        # Default to 0 if no data exists
+        maimai_month = row["maimai_total"] or 0
+        chunithm_month = row["chunithm_total"] or 0
+
+        # Calculate monthly cost (1 play = 40 THB)
+        cost_maimai_month = maimai_month * 40
+        cost_chunithm_month = chunithm_month * 40
+
+        # Compute monthly averages
+        avg_maimai_month = cost_maimai_month / last_month_end.day if maimai_month > 0 else 0
+        avg_chunithm_month = cost_chunithm_month / last_month_end.day if chunithm_month > 0 else 0
+
+        # Generate the report message
+        report_content = (
+            f"📊 **Monthly Play Report ({last_month_start.strftime('%B %Y')})**\n\n"
+            f"🎵 **Maimai**: {maimai_month} plays → **{cost_maimai_month:,} THB** (avg {avg_maimai_month:.2f} THB/day)\n"
+            f"🎶 **Chunithm**: {chunithm_month} plays → **{cost_chunithm_month:,} THB** (avg {avg_chunithm_month:.2f} THB/day)\n"
+        )
+
+        # Send to Discord
+        message = {
+            "username": "Game Stats Bot",
+            "avatar_url": "https://pbs.twimg.com/media/F2kuFKjaYAEWnpO?format=jpg&name=4096x4096",
+            "content": report_content,
+        }
+        response = requests.post(
+            DISCORD_WEBHOOK_URL,
+            data=json.dumps(message),
+            headers={"Content-Type": "application/json"},
+        )
+
+        if response.status_code == 204:
+            print("✅ Monthly report sent to Discord.")
+        else:
+            print(f"❌ Failed to send monthly report. Response: {response.text}")
     finally:
         await conn.close()
 
@@ -230,14 +266,14 @@ async def main():
     yesterday_str = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
     today = datetime.today()
     
-    # Run the monthly report on the 1st of each month
+    # Send the monthly report on the 1st of each month
     if today.day == 1:
-        await generate_spending_report()
+        await generate_monthly_report()
     
-    # Run the weekly report every Monday
+    # Send the weekly report every Monday
     if today.weekday() == 0:  # Monday (0 = Monday, 6 = Sunday)
-        await generate_spending_report()
-
+        await generate_weekly_report()
+        
     # Get cumulative play counts from the websites.
     chunithm_cumulative = await login_and_get_play_count("chunithm") if CONFIG["chunithm"] else 0
     maimai_cumulative = await login_and_get_play_count("maimai") if CONFIG["maimai"] else 0
