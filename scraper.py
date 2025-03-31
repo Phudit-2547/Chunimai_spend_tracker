@@ -158,49 +158,58 @@ async def generate_spending_report():
     try:
         today = datetime.today()
 
-        # WEEKLY CALCULATION (Monday-Sunday)
-        week_start = today - timedelta(days=today.weekday())  # Get Monday of the current week
+        # WEEKLY CALCULATION (Last Monday-Sunday)
+        last_sunday = today - timedelta(days=today.weekday() + 1)  # Last Sunday
+        last_monday = last_sunday - timedelta(days=6)  # Monday before that
         query_weekly = """
             SELECT SUM(maimai_play_count) AS maimai_total, SUM(chunithm_play_count) AS chunithm_total
             FROM public.play_data 
             WHERE play_date BETWEEN $1 AND $2;
         """
-        weekly_row = await conn.fetchrow(query_weekly, week_start, today)
+        weekly_row = await conn.fetchrow(query_weekly, last_monday, last_sunday)
 
         maimai_weekly = weekly_row["maimai_total"] or 0
         chunithm_weekly = weekly_row["chunithm_total"] or 0
         maimai_weekly_cost = maimai_weekly * 40
         chunithm_weekly_cost = chunithm_weekly * 40
 
-        # MONTHLY CALCULATION (Calendar Month)
-        month_start = today.replace(day=1)  # First day of the current month
+        avg_maimai_weekly = maimai_weekly_cost / 7 if maimai_weekly > 0 else 0
+        avg_chunithm_weekly = chunithm_weekly_cost / 7 if chunithm_weekly > 0 else 0
+
+        # MONTHLY CALCULATION (Last Calendar Month)
+        month_start = today.replace(day=1)  # First day of current month
+        last_month_end = month_start - timedelta(days=1)  # Last day of previous month
+        last_month_start = last_month_end.replace(day=1)  # First day of previous month
         query_monthly = """
             SELECT SUM(maimai_play_count) AS maimai_total, SUM(chunithm_play_count) AS chunithm_total
             FROM public.play_data 
             WHERE play_date BETWEEN $1 AND $2;
         """
-        monthly_row = await conn.fetchrow(query_monthly, month_start, today)
+        monthly_row = await conn.fetchrow(query_monthly, last_month_start, last_month_end)
 
         maimai_monthly = monthly_row["maimai_total"] or 0
         chunithm_monthly = monthly_row["chunithm_total"] or 0
         maimai_monthly_cost = maimai_monthly * 40
         chunithm_monthly_cost = chunithm_monthly * 40
 
+        avg_maimai_monthly = maimai_monthly_cost / last_month_end.day if maimai_monthly > 0 else 0
+        avg_chunithm_monthly = chunithm_monthly_cost / last_month_end.day if chunithm_monthly > 0 else 0
+
         # Generate report message
         report_content = (
             f"📊 **Spending Report**\n"
-            f"📅 **Weekly (Mon-Sun):**\n"
-            f"🎵 **Maimai**: {maimai_weekly} plays → 💰 {maimai_weekly_cost} THB\n"
-            f"🎶 **Chunithm**: {chunithm_weekly} plays → 💰 {chunithm_weekly_cost} THB\n\n"
-            f"📆 **Monthly ({today.strftime('%B %Y')}):**\n"
-            f"🎵 **Maimai**: {maimai_monthly} plays → 💰 {maimai_monthly_cost} THB\n"
-            f"🎶 **Chunithm**: {chunithm_monthly} plays → 💰 {chunithm_monthly_cost} THB"
+            f"📅 **Last Week (Mon-Sun):**\n"
+            f"🎵 **Maimai**: {maimai_weekly} plays → 💰 {maimai_weekly_cost:,} THB (avg {avg_maimai_weekly:.2f} THB/day)\n"
+            f"🎶 **Chunithm**: {chunithm_weekly} plays → 💰 {chunithm_weekly_cost:,} THB (avg {avg_chunithm_weekly:.2f} THB/day)\n\n"
+            f"📆 **Last Month ({last_month_start.strftime('%B %Y')}):**\n"
+            f"🎵 **Maimai**: {maimai_monthly} plays → 💰 {maimai_monthly_cost:,} THB (avg {avg_maimai_monthly:.2f} THB/day)\n"
+            f"🎶 **Chunithm**: {chunithm_monthly} plays → 💰 {chunithm_monthly_cost:,} THB (avg {avg_chunithm_monthly:.2f} THB/day)"
         )
 
         # Send report to Discord
         message = {
             "username": "Game Stats Bot",
-            "avatar_url": "https://storage.sekai.best/sekai-jp-assets/character/member/res005_no026_rip/card_normal.webp",
+            "avatar_url": "https://static.wikitide.net/projectsekaiwiki/0/0f/Minori_V2.png",
             "content": report_content,
         }
         response = requests.post(
