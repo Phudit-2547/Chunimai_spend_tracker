@@ -138,8 +138,8 @@ def send_discord_notification(game, play_count):
     """Sends a Discord notification if play_count (daily new plays) > 0."""
     if play_count > 0:
         message = {
-            "username": "Game Scraper Bot",
-            "avatar_url": "https://pbs.twimg.com/media/F2kuDs2bkAA9wVR?format=jpg&name=4096x4096",
+            "username": "毎日みのり",
+            "avatar_url": "https://pbs.twimg.com/media/Fg4AsmAaUAA2TDX?format=jpg&name=4096x4096",
             "content": f"🎵 **{game.capitalize()}**: You played **{play_count}** new credits today!"
         }
         response = requests.post(
@@ -175,21 +175,24 @@ async def generate_weekly_report():
         # Calculate weekly cost (1 play = 40 THB)
         cost_maimai_week = maimai_week * 40
         cost_chunithm_week = chunithm_week * 40
-
+        total_cost_week = cost_maimai_week + cost_chunithm_week
+        
         # Compute weekly averages
         avg_maimai_week = cost_maimai_week / 7 if maimai_week > 0 else 0
         avg_chunithm_week = cost_chunithm_week / 7 if chunithm_week > 0 else 0
-
+        avg_total_week = total_cost_week / 7 if (maimai_week + chunithm_week) > 0 else 0
+        
         # Generate the report message
         report_content = (
-            f"📊 **Weekly Play Report (Mon-Sun)**\n\n"
+            f"📊 **Last Week Play Report**\n\n"
             f"🎵 **Maimai**: {maimai_week} plays → **{cost_maimai_week:,} THB** (avg {avg_maimai_week:.2f} THB/day)\n"
             f"🎶 **Chunithm**: {chunithm_week} plays → **{cost_chunithm_week:,} THB** (avg {avg_chunithm_week:.2f} THB/day)\n"
+            f"**Total**: {maimai_week + chunithm_week} plays → **{total_cost_week:,} THB** (avg {avg_total_month:.2f} THB/day)"
         )
 
         # Send to Discord
         message = {
-            "username": "Game Stats Bot",
+            "username": "毎週みのり",
             "avatar_url": "https://pbs.twimg.com/media/F2kuDs2bkAA9wVR?format=jpg&name=4096x4096",
             "content": report_content,
         }
@@ -230,21 +233,24 @@ async def generate_monthly_report():
         # Calculate monthly cost (1 play = 40 THB)
         cost_maimai_month = maimai_month * 40
         cost_chunithm_month = chunithm_month * 40
-
+        total_cost_month = cost_maimai_month + cost_chunithm_month
+        
         # Compute monthly averages
         avg_maimai_month = cost_maimai_month / last_month_end.day if maimai_month > 0 else 0
         avg_chunithm_month = cost_chunithm_month / last_month_end.day if chunithm_month > 0 else 0
-
+        avg_total_month = total_cost_month / last_month_end.day if (maimai_month + chunithm_month) > 0 else 0
+        
         # Generate the report message
         report_content = (
             f"📊 **Monthly Play Report ({last_month_start.strftime('%B %Y')})**\n\n"
             f"🎵 **Maimai**: {maimai_month} plays → **{cost_maimai_month:,} THB** (avg {avg_maimai_month:.2f} THB/day)\n"
             f"🎶 **Chunithm**: {chunithm_month} plays → **{cost_chunithm_month:,} THB** (avg {avg_chunithm_month:.2f} THB/day)\n"
+            f"**Total**: {maimai_month + chunithm_month} plays → **{total_cost_month:,} THB** (avg {avg_total_month:.2f} THB/day)"
         )
 
         # Send to Discord
         message = {
-            "username": "Game Stats Bot",
+            "username": "桃井 愛莉",
             "avatar_url": "https://pbs.twimg.com/media/F2kuFKjaYAEWnpO?format=jpg&name=4096x4096",
             "content": report_content,
         }
