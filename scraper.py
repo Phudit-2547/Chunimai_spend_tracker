@@ -110,14 +110,11 @@ async def login_and_get_play_count(game):
     }
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(
-            headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-            ]
-        )
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context()
 
+        # Start tracing
+        await context.tracing.start(screenshots=True, snapshots=True, sources=True)
         page = await browser.new_page()
 
         print(f"🔄 Logging into {game}...")
@@ -139,6 +136,7 @@ async def login_and_get_play_count(game):
             match = re.search(r"maimaiDX total play count：(\d+)", play_count_text)
             cumulative = int(match.group(1)) if match else 0
 
+        await context.tracing.stop(path="trace.zip")
         await browser.close()
         return cumulative
 

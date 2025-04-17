@@ -29,3 +29,10 @@ jobs:
           USERNAME: ${{ secrets.USERNAME }}
           PASSWORD: ${{ secrets.PASSWORD }}
         run: python scraper.py 
+      - name: Upload trace for debugging
+        if: always()  # Run even if scraper fails
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-trace
+          path: trace.zip
+
