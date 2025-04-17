@@ -110,7 +110,14 @@ async def login_and_get_play_count(game):
     }
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(
+            headless=True,
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+            ]
+        )
+
         page = await browser.new_page()
 
         print(f"🔄 Logging into {game}...")
