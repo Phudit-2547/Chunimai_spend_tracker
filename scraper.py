@@ -1,17 +1,19 @@
 import asyncio
 import json
-import os
 import re
 import requests
 import asyncpg  # PostgreSQL async library
+from envparse import env
 from playwright.async_api import async_playwright
 from datetime import datetime, timedelta
 
+env.read_envfile()
+
 # Get configuration from environment variables
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-DATABASE_URL = os.getenv("DATABASE_URL")
-USERNAME = os.getenv("USERNAME")
-PASSWORD = os.getenv("PASSWORD")
+DISCORD_WEBHOOK_URL = env("DISCORD_WEBHOOK_URL")
+DATABASE_URL = env("DATABASE_URL")
+USERNAME = env("USERNAME")
+PASSWORD = env("PASSWORD")
 
 # ✅ CONFIG: Enable or disable games
 CONFIG = {"chunithm": True, "maimai": True}
