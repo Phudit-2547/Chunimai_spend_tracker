@@ -89,20 +89,24 @@ async def login_and_get_play_count(game):
     """
     Logs into the game website and retrieves the cumulative play count from the Player Data page.
     
-    For **chunithm**: Navigates to https://chunithm-net-eng.com/mobile/home/playerData
+    For chunithm: Navigates to https://chunithm-net-eng.com/mobile/home/playerData
        and extracts the number from:
          <div class="user_data_play_count">
              <div class="user_data_text">72</div>
          </div>
     
-    For **maimai**: Navigates to https://maimaidx-eng.com/maimai-mobile/playerData/ and uses regex
+    For maimai: Navigates to https://maimaidx-eng.com/maimai-mobile/playerData/ and uses regex
        to extract the cumulative count (e.g., "maimaiDX total play count：300").
     """
     LOGIN_URLS = {
-        "chunithm": ("https://lng-tgk-aime-gw.am-all.net/common_auth/login?site_id=chuniex"
-                      "&redirect_url=https://chunithm-net-eng.com/mobile/&back_url=https://chunithm.sega.com/"),
-        "maimai": ("https://lng-tgk-aime-gw.am-all.net/common_auth/login?site_id=maimaidxex"
-                   "&redirect_url=https://maimaidx-eng.com/maimai-mobile/&back_url=https://maimai.sega.com/"),
+        "chunithm": (
+            "https://lng-tgk-aime-gw.am-all.net/common_auth/login?site_id=chuniex"
+            "&redirect_url=https://chunithm-net-eng.com/mobile/&back_url=https://chunithm.sega.com/"
+        ),
+        "maimai": (
+            "https://lng-tgk-aime-gw.am-all.net/common_auth/login?site_id=maimaidxex"
+            "&redirect_url=https://maimaidx-eng.com/maimai-mobile/&back_url=https://maimai.sega.com/"
+        ),
     }
     HOME_URLS = {
         "chunithm": "https://chunithm-net-eng.com/mobile/home/",
@@ -110,7 +114,8 @@ async def login_and_get_play_count(game):
     }
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.firefox.launch(headless=True)
+
         context = await browser.new_context()
 
         # Start tracing
@@ -123,7 +128,15 @@ async def login_and_get_play_count(game):
         await page.locator("#sid").fill(USERNAME)
         await page.locator("#password").fill(PASSWORD)
         await page.locator("input#btnSubmit.c-button--login").click()
-        await page.wait_for_url(HOME_URLS[game])
+        print(f"🔄 Waiting for {game} home page...")
+        try:
+            await page.wait_for_url(HOME_URLS[game])
+        except Exception as e:
+            print(page.url)
+            print(f"❌ Failed to load {game} home page: {e}")
+            await context.tracing.stop(path="trace.zip")
+            await browser.close()
+            return 0
 
         if game == "chunithm":
             await page.goto("https://chunithm-net-eng.com/mobile/home/playerData", wait_until="domcontentloaded")
