@@ -1,5 +1,5 @@
 import asyncpg
-from datetime import datetime
+from datetime import date, datetime
 
 from play_counter.config import DATABASE_URL
 
@@ -22,7 +22,11 @@ async def get_cumulative(game: str, date_str: str) -> int:
 
 
 async def upsert_play_data(
-    date_str: str, maimai_new: int, chun_new: int, maimai_cum: int, chun_cum: int
+    date_str: str,
+    maimai_new: int,
+    chunithm_new: int,
+    maimai_cumulative: int,
+    chunithm_cumulative: int,
 ):
     conn = await connect_db()
     try:
@@ -41,9 +45,13 @@ async def upsert_play_data(
             """,
             date_obj,
             maimai_new,
-            chun_new,
-            maimai_cum,
-            chun_cum,
+            chunithm_new,
+            maimai_cumulative,
+            chunithm_cumulative,
+        )
+        print(
+            f"✅ Data saved: {date} | Maimai new: {maimai_new}, Chunithm new: {chunithm_new} | "
+            f"Maimai cumulative: {maimai_cumulative}, Chunithm cumulative: {chunithm_cumulative}"
         )
     finally:
         await conn.close()
