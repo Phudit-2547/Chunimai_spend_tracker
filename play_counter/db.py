@@ -1,5 +1,5 @@
 import asyncpg
-from datetime import date, datetime
+from datetime import datetime
 
 from play_counter.config import DATABASE_URL
 
@@ -50,7 +50,7 @@ async def upsert_play_data(
             chunithm_cumulative,
         )
         print(
-            f"✅ Data saved: {date} | Maimai new: {maimai_new}, Chunithm new: {chunithm_new} | "
+            f"✅ Data saved: {date_str} | Maimai new: {maimai_new}, Chunithm new: {chunithm_new} | "
             f"Maimai cumulative: {maimai_cumulative}, Chunithm cumulative: {chunithm_cumulative}"
         )
     finally:
