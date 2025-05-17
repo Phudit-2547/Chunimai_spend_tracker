@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from play_counter.config import CONFIG
 from play_counter.scraper import fetch_cumulative
 from play_counter.db import get_cumulative, upsert_play_data
-from play_counter.notifier import send_notification
+from play_counter.daily_play_notifier import send_notification
 from play_counter.reports.weekly import generate_weekly_report
 from play_counter.reports.monthly import generate_monthly_report  
 
