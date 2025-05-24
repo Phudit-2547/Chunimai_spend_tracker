@@ -22,7 +22,7 @@ NOTIFICATION_CONFIG = {
     "chunithm": {
         "username": "毎日みのり",
         "avatar_url": "https://pbs.twimg.com/media/Fg4AsmAaUAA2TDX?format=jpg",
-        "message_template": "**{game.upper()}**: You played **{new_plays}** credits today!",
+        "message_template": "**{game}**: You played **{new_plays}** credits today!",
         "emoji": "🎶",
     },
 }

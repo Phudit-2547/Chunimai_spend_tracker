@@ -30,13 +30,15 @@ def send_notification(
     # Get game-specific configuration
     config = NOTIFICATION_CONFIG.get(game, NOTIFICATION_CONFIG["default"])
 
+    game_display = game.upper() if game == "chunithm" else game
+
     # Create message based on play count
     if new_plays > 0:
         message_template = config.get(
             "message_template",
             "**{game}**: You played **{new_plays}** credits today!",
         )
-        message = message_template.format(game=game, new_plays=new_plays)
+        message = message_template.format(game=game_display, new_plays=new_plays)
     else:
         message = f"**{game}**: No new plays today."
 
