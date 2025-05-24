@@ -38,7 +38,7 @@ async def generate_weekly_report():
         report_content = (
             f"📊 **Last Week Play Report**\n\n"
             f"🎵 **Maimai**: {maimai_week} plays → **{cost_maimai_week:,} THB** (avg {avg_maimai_week:.2f} THB/day)\n"
-            f"🎶 **Chunithm**: {chunithm_week} plays → **{cost_chunithm_week:,} THB** (avg {avg_chunithm_week:.2f} THB/day)\n"
+            f"🎶 **CHUNITHM**: {chunithm_week} plays → **{cost_chunithm_week:,} THB** (avg {avg_chunithm_week:.2f} THB/day)\n"
             f"**Total**: {maimai_week + chunithm_week} plays → **{total_cost_week:,} THB** (avg {avg_total_week:.2f} THB/day)"
         )
 

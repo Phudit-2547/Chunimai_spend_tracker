@@ -39,8 +39,8 @@ async def generate_monthly_report():
         # Generate the report message
         report_content = (
             f"📊 **Monthly Play Report ({start:%B %Y})**\n\n"
-            f"🎵 **Maimai**: {maimai_total} plays → **{cost_maimai:,} THB** (avg {avg_maimai:.2f} THB/day)\n"
-            f"🎶 **Chunithm**: {chunithm_total} plays → **{cost_chunithm:,} THB** (avg {avg_chunithm:.2f} THB/day)\n"
+            f"🎵 **maimai**: {maimai_total} plays → **{cost_maimai:,} THB** (avg {avg_maimai:.2f} THB/day)\n"
+            f"🎶 **CHUNITHM**: {chunithm_total} plays → **{cost_chunithm:,} THB** (avg {avg_chunithm:.2f} THB/day)\n"
             f"**Total**: {maimai_total + chunithm_total} plays → **{total_cost:,} THB** (avg {avg_total:.2f} THB/day)"
         )
 
