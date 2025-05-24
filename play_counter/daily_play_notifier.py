@@ -29,19 +29,16 @@ def send_notification(
 
     # Get game-specific configuration
     config = NOTIFICATION_CONFIG.get(game, NOTIFICATION_CONFIG["default"])
-    game_cap = game.capitalize()
 
     # Create message based on play count
     if new_plays > 0:
         message_template = config.get(
             "message_template",
-            "**{game_cap}**: You played **{new_plays}** credits today!",
+            "**{game}**: You played **{new_plays}** credits today!",
         )
-        message = message_template.format(
-            game=game, game_cap=game_cap, new_plays=new_plays
-        )
+        message = message_template.format(game=game, new_plays=new_plays)
     else:
-        message = f"**{game_cap}**: No new plays today."
+        message = f"**{game}**: No new plays today."
 
     # Prepare payload
     payload = {
