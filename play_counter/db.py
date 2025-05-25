@@ -55,3 +55,13 @@ async def upsert_play_data(
         )
     finally:
         await conn.close()
+
+
+async def test_db_connection():
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+        await conn.close()
+        return True
+    except Exception as e:
+        print(f"Database connection failed: {e}")
+        return False
