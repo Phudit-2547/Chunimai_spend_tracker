@@ -22,6 +22,17 @@ jobs:
           pip install -r requirements.txt
           playwright install
 
+      - name: Cache pip and Playwright browsers
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-playwright
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-playwright-
+
       - name: Load Environment Variables
         run: |
           echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> $GITHUB_ENV
