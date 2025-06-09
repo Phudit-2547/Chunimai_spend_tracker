@@ -11,7 +11,7 @@ CONFIG = {"chunithm": True, "maimai": True}
 NOTIFICATION_CONFIG = {
     "default": {
         "username": "毎日みのり",
-        "avatar_url": "https://pbs.twimg.com/media/Fg4AsmAaUAA2TDX?format=jpg",
+        "avatar_url": "https://pbs.twimg.com/media/GjfKtY6acAIo5Ga?format=jpg",
     },
     "maimai": {
         "username": "毎日みのり",
