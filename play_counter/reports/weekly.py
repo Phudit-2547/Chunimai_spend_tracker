@@ -1,7 +1,10 @@
-import requests
 import json
+
+import requests
+
+from play_counter.config import NOTIFICATION_CONFIG
+from play_counter.config import WEEKREPORT_WEBHOOK as DISCORD_WEBHOOK_URL
 from play_counter.db import connect_db
-from play_counter.utils.constants import DISCORD_WEBHOOK_URL
 from play_counter.utils.date_helpers import last_week_range
 
 
@@ -11,6 +14,9 @@ async def generate_weekly_report():
     try:
         # Get last week's date range
         last_monday, last_sunday = last_week_range()
+
+        # Get weekly report specific configuration
+        config = NOTIFICATION_CONFIG.get("weekly", NOTIFICATION_CONFIG["default"])
 
         # Query for last week
         query = """
@@ -28,26 +34,34 @@ async def generate_weekly_report():
         cost_maimai_week = maimai_week * 40
         cost_chunithm_week = chunithm_week * 40
         total_cost_week = cost_maimai_week + cost_chunithm_week
-        
+
         # Compute weekly averages
         avg_maimai_week = cost_maimai_week / 7 if maimai_week > 0 else 0
         avg_chunithm_week = cost_chunithm_week / 7 if chunithm_week > 0 else 0
         avg_total_week = total_cost_week / 7 if (maimai_week + chunithm_week) > 0 else 0
-        
-        # Generate the report message
+
+        # Generate the report message using config template if available
+        maimai_config = NOTIFICATION_CONFIG.get("maimai", {})
+        chunithm_config = NOTIFICATION_CONFIG.get("chunithm", {})
+
+        maimai_emoji = maimai_config.get("emoji", "🎵")
+        chunithm_emoji = chunithm_config.get("emoji", "🎶")
+
         report_content = (
             f"📊 **Last Week Play Report**\n\n"
-            f"🎵 **Maimai**: {maimai_week} plays → **{cost_maimai_week:,} THB** (avg {avg_maimai_week:.2f} THB/day)\n"
-            f"🎶 **CHUNITHM**: {chunithm_week} plays → **{cost_chunithm_week:,} THB** (avg {avg_chunithm_week:.2f} THB/day)\n"
+            f"{maimai_emoji} **Maimai**: {maimai_week} plays → **{cost_maimai_week:,} THB** (avg {avg_maimai_week:.2f} THB/day)\n"
+            f"{chunithm_emoji} **CHUNITHM**: {chunithm_week} plays → **{cost_chunithm_week:,} THB** (avg {avg_chunithm_week:.2f} THB/day)\n"
             f"**Total**: {maimai_week + chunithm_week} plays → **{total_cost_week:,} THB** (avg {avg_total_week:.2f} THB/day)"
         )
 
-        # Send to Discord
         message = {
-            "username": "毎週みのり",
-            "avatar_url": "https://pbs.twimg.com/media/F2kuDs2bkAA9wVR?format=jpg&name=4096x4096",
+            "username": config.get("username", "毎週みのり"),
+            "avatar_url": config.get(
+                "avatar_url", "https://pbs.twimg.com/media/Fg4AsmAaUAA2TDX?format=jpg"
+            ),
             "content": report_content,
         }
+
         response = requests.post(
             DISCORD_WEBHOOK_URL,
             data=json.dumps(message),
