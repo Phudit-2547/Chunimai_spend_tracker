@@ -12,26 +12,26 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Cache pip and Playwright browsers
-        uses: actions/cache@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          path: |
-            ~/.cache/pip
-            ~/.cache/ms-playwright
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-playwright
-          restore-keys: |
-            ${{ runner.os }}-pip-
-            ${{ runner.os }}-playwright-
+          enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        run: uv python install 3.10
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v3
         with:
-          python-version: '3.10'
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
 
       - name: Install Dependencies
         run: |
-          pip install -r requirements.txt
-          playwright install
+          uv sync
+          uv run playwright install
 
       - name: Load Environment Variables
         run: |
@@ -46,7 +46,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           USERNAME: ${{ secrets.USERNAME }}
           PASSWORD: ${{ secrets.PASSWORD }}
-        run: python main.py 
+        run: uv run python main.py 
 
       - name: Upload trace for debugging
         if: always()  # Run even if scraper fails
