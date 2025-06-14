@@ -20,13 +20,13 @@ NOTIFICATION_CONFIG = {
     },
     "maimai": {
         "username": "毎日みのり",
-        "avatar_url": "https://pbs.twimg.com/media/Fg4AsmAaUAA2TDX?format=jpg",
+        "avatar_url": "https://cdn.discordapp.com/attachments/917303163470635018/1383463722483449859/3a9fa41c9b0ef014.png?ex=684ee27e&is=684d90fe&hm=5581ac98a03f9559cd04a3034116ddd255d1077db5a65deafa4c9b2662ef2606&",
         "message_template": "**{game}**: You played **{new_plays}** credit(s) today!",
         "emoji": "🎵",
     },
     "chunithm": {
         "username": "毎日みのり",
-        "avatar_url": "https://pbs.twimg.com/media/Fg4AsmAaUAA2TDX?format=jpg",
+        "avatar_url": "https://cdn.discordapp.com/attachments/917303163470635018/1383463722483449859/3a9fa41c9b0ef014.png?ex=684ee27e&is=684d90fe&hm=5581ac98a03f9559cd04a3034116ddd255d1077db5a65deafa4c9b2662ef2606&",
         "message_template": "**{game}**: You played **{new_plays}** credit(s) today!",
         "emoji": "🎶",
     },
