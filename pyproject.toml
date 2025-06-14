@@ -1,6 +1,6 @@
 [project]
 name = "chunimai-spend-tracker"
-version = "0.1.1"
+version = "0.1.2"
 description = "A project that track your spending on maimai and chunithm"
 readme = "README.md"
 requires-python = ">=3.10"
