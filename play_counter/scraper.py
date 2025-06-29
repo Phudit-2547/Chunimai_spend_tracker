@@ -1,13 +1,28 @@
 import asyncio
 import re
-
+import requests
 from playwright.async_api import async_playwright
 
 from play_counter.config import PASSWORD, USERNAME
-from play_counter.utils.constants import HOME_URLS, LOGIN_URLS
+from play_counter.utils.constants import HOME_URLS, LOGIN_URLS, DISCORD_WEBHOOK_URL
 
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
+
+def send_discord_notification(game: str, error_message: str):
+    """Send notification to Discord when scraping fails."""
+    payload = {
+        "content": f"🚨 **Scraping Failed** 🚨\n\n**Game:** {game}\n**Error:** {error_message}\n**All {MAX_RETRIES} retries exhausted.**"
+    }
+    
+    try:
+        response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
+        if response.status_code == 204:
+            print("✅ Discord notification sent successfully")
+        else:
+            print(f"⚠️ Failed to send Discord notification: {response.status_code}")
+    except Exception as e:
+        print(f"⚠️ Error sending Discord notification: {e}")
 
 
 async def fetch_cumulative(game: str) -> int:
@@ -23,6 +38,8 @@ async def fetch_cumulative(game: str) -> int:
     For maimai: Navigates to https://maimaidx-eng.com/maimai-mobile/playerData/ and uses regex
        to extract the cumulative count (e.g., "maimaiDX total play count：300").
     """
+    last_error = None
+    
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             async with async_playwright() as p:
@@ -80,12 +97,13 @@ async def fetch_cumulative(game: str) -> int:
                 await browser.close()
                 print(f"✅ Fetched cumulative {game} play count: {cumulative}")
                 return cumulative
-
         except Exception as e:
+            last_error = str(e)
             print(f"⚠️ Attempt {attempt} failed: {e}")
             if attempt < MAX_RETRIES:
                 print(f"⏳ Retrying in {RETRY_DELAY} seconds...")
                 await asyncio.sleep(RETRY_DELAY)
             else:
                 print("❌ All retries failed.")
+                send_discord_notification(game, last_error)
                 return 0
