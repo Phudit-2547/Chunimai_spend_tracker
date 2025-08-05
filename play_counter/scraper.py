@@ -1,20 +1,22 @@
 import asyncio
 import re
+
 import requests
 from playwright.async_api import async_playwright
 
 from play_counter.config import PASSWORD, USERNAME
-from play_counter.utils.constants import HOME_URLS, LOGIN_URLS, DISCORD_WEBHOOK_URL
+from play_counter.utils.constants import DISCORD_WEBHOOK_URL, HOME_URLS, LOGIN_URLS
 
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
+
 
 def send_discord_notification(game: str, error_message: str):
     """Send notification to Discord when scraping fails."""
     payload = {
         "content": f"🚨 **Scraping Failed** 🚨\n\n**Game:** {game}\n**Error:** {error_message}\n**All {MAX_RETRIES} retries exhausted.**"
     }
-    
+
     try:
         response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
         if response.status_code == 204:
@@ -39,7 +41,7 @@ async def fetch_cumulative(game: str) -> int:
        to extract the cumulative count (e.g., "maimaiDX total play count：300").
     """
     last_error = None
-    
+
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             async with async_playwright() as p:
@@ -57,7 +59,24 @@ async def fetch_cumulative(game: str) -> int:
                 await page.locator("span.c-button--openid--segaId").click()
                 await page.locator("#sid").fill(USERNAME)
                 await page.locator("#password").fill(PASSWORD)
-                await page.locator("input#btnSubmit.c-button--login").click()
+                # Check the agreement checkbox right before login
+                await page.locator("label.c-form__label--bg").click()
+                await page.wait_for_timeout(1000)
+
+                # Ensure checkbox is checked (retry if needed)
+                for i in range(3):  # Try up to 3 times
+                    is_checked = await page.locator("#agree").is_checked()
+                    if is_checked:
+                        break
+                    print(f"🔄 Checkbox unchecked, clicking again... (attempt {i+1})")
+                    await page.locator("label.c-form__label--bg").click()
+                    await page.wait_for_timeout(500)
+
+                # Wait for login button to be enabled and click
+                print("🔄 Waiting for login button to be enabled...")
+                await page.wait_for_selector("button#btnSubmit:not([disabled])", timeout=10000)
+                await page.locator("button#btnSubmit").click()
+                print("✅ Login button clicked successfully")
 
                 print(f"🔄 Waiting for {game} home page...")
                 try:

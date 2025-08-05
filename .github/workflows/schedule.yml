@@ -2,7 +2,7 @@ name: Run Scraper
 
 on:
   schedule:
-    - cron: '0 14 * * *'  # Runs daily at 21:00 Thailand time (UTC+7)
+    - cron: '0 15 * * *'  # Runs daily at 22:00 Thailand time (UTC+7)
   workflow_dispatch:  # ✅ Allows manual trigger
 
 jobs:
