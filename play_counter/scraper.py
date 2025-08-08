@@ -59,22 +59,59 @@ async def fetch_cumulative(game: str) -> int:
                 await page.locator("span.c-button--openid--segaId").click()
                 await page.locator("#sid").fill(USERNAME)
                 await page.locator("#password").fill(PASSWORD)
-                # Check the agreement checkbox right before login
-                await page.locator("label.c-form__label--bg").click()
-                await page.wait_for_timeout(1000)
 
-                # Ensure checkbox is checked (retry if needed)
-                for i in range(3):  # Try up to 3 times
-                    is_checked = await page.locator("#agree").is_checked()
-                    if is_checked:
-                        break
-                    print(f"🔄 Checkbox unchecked, clicking again... (attempt {i+1})")
-                    await page.locator("label.c-form__label--bg").click()
-                    await page.wait_for_timeout(500)
+                # Check the agreement checkbox right before login
+                if game == "maimai":
+                    # Maimai has specific .agree class
+                    await page.locator(
+                        "label.c-form__label--bg.agree input#agree"
+                    ).click()
+                    await page.wait_for_timeout(1000)
+
+                    # Ensure checkbox is checked (retry if needed)
+                    for i in range(3):  # Try up to 3 times
+                        is_checked = await page.locator(
+                            "label.c-form__label--bg.agree input#agree"
+                        ).is_checked()
+                        if is_checked:
+                            break
+                        print(
+                            f"🔄 Checkbox unchecked, clicking again... (attempt {i + 1})"
+                        )
+                        await page.locator(
+                            "label.c-form__label--bg.agree input#agree"
+                        ).click()
+                        await page.wait_for_timeout(500)
+
+                elif game == "chunithm":
+                    # Chunithm uses basic .c-form__label--bg without .agree class
+                    # Use text-based selector to avoid conflict with maimai checkbox
+                    await page.get_by_text(
+                        "Agree to the terms of use for Aime service"
+                    ).click()
+                    await page.wait_for_timeout(1000)
+
+                    # Ensure checkbox is checked (retry if needed)
+                    for i in range(3):  # Try up to 3 times
+                        # Use the specific checkbox that's NOT in the .agree label
+                        is_checked = await page.locator(
+                            "label.c-form__label--bg:not(.agree) input#agree"
+                        ).is_checked()
+                        if is_checked:
+                            break
+                        print(
+                            f"🔄 Checkbox unchecked, clicking again... (attempt {i + 1})"
+                        )
+                        await page.get_by_text(
+                            "Agree to the terms of use for Aime service"
+                        ).click()
+                        await page.wait_for_timeout(500)
 
                 # Wait for login button to be enabled and click
                 print("🔄 Waiting for login button to be enabled...")
-                await page.wait_for_selector("button#btnSubmit:not([disabled])", timeout=10000)
+                await page.wait_for_selector(
+                    "button#btnSubmit:not([disabled])", timeout=10000
+                )
                 await page.locator("button#btnSubmit").click()
                 print("✅ Login button clicked successfully")
 
